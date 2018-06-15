@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Hongbin">
+    
+    
+
+    <base href="https://pjatgithub.github.io/">
+    <title>
+  SSH Port Forwarding · Radar
+</title>
+
+    <link rel="canonical" href="https://pjatgithub.github.io/posts/ssh-port-forwarding/">
+
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Mono:400,700">
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="https://pjatgithub.github.io/css/style.min.css">
+
+    
+
+    <link rel="icon" type="image/png" href="https://pjatgithub.github.io/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://pjatgithub.github.io/images/favicon-16x16.png" sizes="16x16">
+
+    
+
+    <meta name="generator" content="Hugo 0.42.1" />
+  </head>
+
+  <body>
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://pjatgithub.github.io/">
+      Radar
+    </a>
+    
+    <ul class="navigation-list float-right">
+      
+      <li class="navigation-item">
+        <a class="navigation-link" href="https://pjatgithub.github.io/posts/">Blog</a>
+      </li>
+      
+    </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+  <article>
+    <header>
+      <h1 class="title">SSH Port Forwarding</h1>
+      <h2 class="date">February 28, 2017</h2>
+
+      
+    </header>
+
+    <blockquote>
+<p><em>UPDATE:</em>
+<em>2017-03-05, add how to configure SSH client</em></p>
+</blockquote>
+
+<p>For more details about configuring SSH client, go to <a href="http://nerderati.com/2011/03/17/simplify-your-life-with-an-ssh-config-file/">Simplify Your Life With an SSH Config File</a>.</p>
+
+<p>There are three types of <a href="https://help.ubuntu.com/community/SSH/OpenSSH/PortForwarding">port forwarding</a> with ssh:</p>
+
+<ol>
+<li><strong>Local port forwarding</strong>: connecting to a remote server via an intermediateSSH server from local machine</li>
+<li><strong>Remote port forwarding</strong>: connecting to a remote server (often in local network) via SSH client from SSH server</li>
+<li><strong>Dynamic port forwarding</strong>: connections from various programs are forwarded via the SSH client, then via the SSH server, and finally to several destination servers</li>
+</ol>
+
+<p></p>
+
+<h2 id="local-port-forwarding">Local Port Forwarding</h2>
+
+<p>Scenario 1:
+- Bypass a firewall to connect to a remote server which is normally blocked by the firewall. For example, host A can&rsquo;t access host C, but it can access host B and host C respectively.
+- Using local remote forwarding makes it possible for host A to access host C.
+- <strong>Note</strong> that host B often has static ip address and is your private server, and host C is probably the websites like Facebook or Google.</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#007f7f"># Run it on host_a
+</span><span style="color:#007f7f"></span>$ ssh -L port_a1:host_c:port_c1 user@host_b
+<span style="color:#007f7f"># Or
+</span><span style="color:#007f7f"></span>$ ssh -Nf -L port_a1:host_c:port_c1 user@host_b</code></pre></div>
+<p>The option <code>-N</code> means to request not to execute a remote command, and <code>-f</code> means to request <code>ssh</code> to to go to background.</p>
+
+<p>SSH creates a connection (tunnel) between <strong>port a1 of host A</strong> and <strong>port c1 of host C</strong>.</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-flow" data-lang="flow">client=&gt;start: Client
+server=&gt;end: Server
+connect_to_port_a1=&gt;inputoutput: Connect to port a1 of host A
+connect_to_host_b=&gt;inputoutput: Connect host A to host B using SSH
+connect_to_port_c1=&gt;inputoutput: Connect host B to port c1 of host C
+
+client(right)-&gt;connect_to_port_a1
+connect_to_port_a1-&gt;connect_to_host_b
+connect_to_host_b-&gt;connect_to_port_c1
+connect_to_port_c1(right)-&gt;server</code></pre></div>
+<h2 id="remote-port-forwarding">Remote Port Forwarding</h2>
+
+<p>Scenario 2:
+- Host <strong>A</strong> is my private and doesn&rsquo;t have static IP address. Via host <strong>B</strong> that has static IP address, host <strong>A</strong> can be easily accessed.</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#007f7f"># Run it on host_a
+</span><span style="color:#007f7f"></span>$ ssh -R port_b1:localhost:port_a1 user@host_b
+<span style="color:#007f7f"># Or
+</span><span style="color:#007f7f"></span>$ ssh -Nf -R port_b1:localhost:port_a1 user@host_b</code></pre></div><div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-flow" data-lang="flow">server=&gt;start: Server
+client=&gt;end: Client
+connect_to_port_b1=&gt;inputoutput: Connect to port b1 of host B
+connect_to_port_a1=&gt;inputoutput: Connect to port a1 of host A
+
+server(right)-&gt;connect_to_port_b1
+connect_to_port_b1-&gt;connect_to_port_a1
+connect_to_port_a1(right)-&gt;client</code></pre></div>
+<p>By default, SSH doesn&rsquo;t allow remote hosts to forward port. Modifying <code>/etc/ssh/sshd_config</code> and enables remote forwarding.</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#007f7f"># Have logged in as root
+</span><span style="color:#007f7f"></span>$ vim /etc/ssh/sshd_config</code></pre></div>
+<p>Add the line:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">GatewayPort = yes</code></pre></div>
+<p>Save it and restart sshd</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#007f7f"># As root
+</span><span style="color:#007f7f"></span>$ service sshd restart</code></pre></div>
+<h2 id="dynamic-port-forwarding">Dynamic Port Forwarding</h2>
+
+<p>Dynamic port forwarding turns a SSH client into a SOCKS proxy server. For this purpose, we can use <a href="http://shadowsocks.org/en/index.html">Shadowsocks</a>.</p>
+
+<h2 id="reference">Reference</h2>
+
+<ol>
+<li><a href="http://blog.trackets.com/2014/05/17/ssh-tunnel-local-and-remote-port-forwarding-explained-with-examples.html">SSH Tunnel - Local and Remote Port Forwarding Explained With Examples</a></li>
+<li><a href="https://help.ubuntu.com/community/SSH/OpenSSH/PortForwarding">SSH/OpenSSH/PortForwarding</a></li>
+<li><a href="https://github.com/shadowsocks/shadowsocks-libev">Shadowsocks shadowsocks-libev</a></li>
+</ol>
+  </article>
+
+  <br/>
+
+  
+      <div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "radarj" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  
+  
+</section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+     © 2017    ·  Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>. 
+  </section>
+</footer>
+
+    </main>
+
+    
+
+  </body>
+
+</html>

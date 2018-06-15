@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Hongbin">
+    
+    
+
+    <base href="https://pjatgithub.github.io/">
+    <title>
+  PostgreSQL Concurrency Control · Radar
+</title>
+
+    <link rel="canonical" href="https://pjatgithub.github.io/posts/postgresql-concurrency-control/">
+
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Mono:400,700">
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="https://pjatgithub.github.io/css/style.min.css">
+
+    
+
+    <link rel="icon" type="image/png" href="https://pjatgithub.github.io/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://pjatgithub.github.io/images/favicon-16x16.png" sizes="16x16">
+
+    
+
+    <meta name="generator" content="Hugo 0.42.1" />
+  </head>
+
+  <body>
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://pjatgithub.github.io/">
+      Radar
+    </a>
+    
+    <ul class="navigation-list float-right">
+      
+      <li class="navigation-item">
+        <a class="navigation-link" href="https://pjatgithub.github.io/posts/">Blog</a>
+      </li>
+      
+    </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+  <article>
+    <header>
+      <h1 class="title">PostgreSQL Concurrency Control</h1>
+      <h2 class="date">April 13, 2017</h2>
+
+      
+    </header>
+
+    <h2 id="transaction-isolation-level">Transaction Isolation Level</h2>
+
+<p>SQL standard defines four levels of transaction isolation.<a href="https://en.wikipedia.org/wiki/Isolation_%28database_systems%29">[1]</a> Each level prevents different inconsistency phenomena:<a href="https://www.postgresql.org/docs/manuals/">[2]</a></p>
+
+<ul>
+<li>A <strong>dirty read</strong> is a transaction reads data written by a concurrent <em>uncommitted</em> transaction.</li>
+<li>A <strong>nonrepeatable read</strong> is a transaction re-reads data it has previously read and finds that data has been modified by another transaction (that <em>committed</em> since the initial read).</li>
+<li>A <strong>phantom read</strong> is a transaction re-executes a query returning a set of rows that satisfy a search condition and finds that the set of rows satisfying the condition has changed due to another recently-committed transaction.</li>
+<li>A <strong>serialization anomaly</strong> is that the result of successfully committing a group of transactions is inconsistent with all possible orderings of running those transactions one at a time.</li>
+</ul>
+
+<p></p>
+
+<p>Here is the comparison of the SQL standard and PostgreSQL-implemented transaction isolation levels:<a href="https://www.postgresql.org/docs/manuals/">[2]</a></p>
+
+<table>
+<thead>
+<tr>
+<th>Isolation level</th>
+<th>Dirty Read</th>
+<th>Nonrepeatable Read</th>
+<th>Phantom Read</th>
+<th>Serialization Anomaly</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Read uncommitted</td>
+<td>Allowed, but not in PG</td>
+<td>Possible</td>
+<td>Possible</td>
+<td>Possible</td>
+</tr>
+
+<tr>
+<td>Read committed</td>
+<td>Not possible</td>
+<td>Possible</td>
+<td>Possible</td>
+<td>Possible</td>
+</tr>
+
+<tr>
+<td>Repeatable read</td>
+<td>Not possible</td>
+<td>Not possible</td>
+<td>Allowed, but not in PG</td>
+<td>Possible</td>
+</tr>
+
+<tr>
+<td>Serializable</td>
+<td>Not possible</td>
+<td>Not possible</td>
+<td>Not possible</td>
+<td>Not possible</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+<p>Note: Some PostgreSQL data types and functions have special rules regarding transactional behavior.</p>
+</blockquote>
+
+<h3 id="read-committed-isolation-level">Read Committed Isolation Level</h3>
+
+<p><strong>Read Committed</strong> is the default isolation level in PostgreSQL. In this transaction isolation level, a <code>SELECT</code>query only &ldquo;sees&rdquo; data committed before the query statement began. It never sees the changes made by concurrent transactions but not committed. However, it sees the changes made by in the same transaction and changes committed by other concurrent transaction.</p>
+
+<p><code>UPDATE</code>, <code>DELETE</code>, <code>SELECT FOR UPDATE</code>, and <code>SELECT FOR SHARE</code> commands behave the same as <code>SELECT</code> in terms of searching for target rows. If another concurrent transaction want to change the same data has to wait for changing until the first commits or rolls back. If the first rolls back, the second will make the commit successfully. Or the first commits, the second will ignore the rows deleted by the first and attempt to apply changes (re-evaluate the search condition on target rows decided before if necessary). In the case of <code>SELECT FOR UPDATE</code> and <code>SELECT FOR SHARE</code>, this means it is the updated version of the row that is locked and returned to the client.</p>
+
+<p><code>INSERT</code> with an <code>ON CONFLICT DO UPDATE</code> clause behaves similarly. In Read Committed mode, each row proposed for insertion will either <em>insert or update</em>. <code>INSERT</code> with an <code>ON CONFLICT DO NOTHING</code> clause may have insertion not proceed for a row due to the outcome of another transaction whose effects are not visible to the <code>INSERT</code> snapshot.</p>
+
+<p>Here is an example from PostgreSQL:</p>
+
+<p>{% asset_img &ldquo;diagram-6885069368243356682.png&rdquo; %}</p>
+
+<p>The table used<a id="db-table"></a>:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#007f7f"># Client A
+</span><span style="color:#007f7f"></span>postgres=&gt; <span style="color:#0ff;font-weight:bold">\d</span> website
+    Table <span style="color:#0ff;font-weight:bold">&#34;postgres.website&#34;</span>
+ Column |  Type   | Modifiers
+--------+---------+-----------
+ hits   | integer | not null
+
+postgres=&gt; SELECT * FROM website;
+ hits
+------
+    <span style="color:#ff0;font-weight:bold">9</span>
+   <span style="color:#ff0;font-weight:bold">10</span>
+(<span style="color:#ff0;font-weight:bold">2</span> rows)</code></pre></div>
+<p>We can start a transaction in a <code>psql</code> process:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"> <span style="color:#007f7f"># Client A
+</span><span style="color:#007f7f"></span>postgres=&gt; BEGIN ISOLATION LEVEL READ COMMITTED;
+BEGIN
+postgres=&gt; UPDATE website SET hits = hits + <span style="color:#ff0;font-weight:bold">1</span>;
+UPDATE <span style="color:#ff0;font-weight:bold">2</span>
+postgres=&gt; SELECT * FROM website;
+ hits
+------
+   <span style="color:#ff0;font-weight:bold">10</span>
+   <span style="color:#ff0;font-weight:bold">11</span>
+(<span style="color:#ff0;font-weight:bold">2</span> rows)</code></pre></div>
+<p>And we can start another transaction in another <code>psql</code> process:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"> <span style="color:#007f7f"># Client B
+</span><span style="color:#007f7f"></span>postgres=&gt; BEGIN ISOLATION LEVEL READ COMMITTED;
+BEGIN
+postgres=&gt; SELECT * FROM website;
+ hits
+------
+    <span style="color:#ff0;font-weight:bold">9</span>
+   <span style="color:#ff0;font-weight:bold">10</span>
+(<span style="color:#ff0;font-weight:bold">2</span> rows)
+
+postgres=&gt; DELETE FROM website WHERE hits = <span style="color:#ff0;font-weight:bold">10</span>;</code></pre></div>
+<p>After I hit the ENTER key, the <code>psql</code> process will be blocked until the first transaction ends (more specifically, commits or rolls back). Return back to the first <code>psql</code> process, and continue to type:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#007f7f"># Client A
+</span><span style="color:#007f7f"></span>postgres=&gt; COMMIT;
+COMMIT
+postgres=&gt; SELECT * FROM website;
+ hits
+------
+   <span style="color:#ff0;font-weight:bold">10</span>
+   <span style="color:#ff0;font-weight:bold">11</span>
+(<span style="color:#ff0;font-weight:bold">2</span> rows)</code></pre></div>
+<p>The second <code>psql</code> proceeds and the <code>DELETE</code> statement deletes nothing:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#007f7f"># Client B
+</span><span style="color:#007f7f"></span>postgres=&gt; DELETE FROM website WHERE hits = <span style="color:#ff0;font-weight:bold">10</span>;
+DELETE <span style="color:#ff0;font-weight:bold">0</span>
+postgres=&gt; SELECT * FROM website;
+ hits
+------
+   <span style="color:#ff0;font-weight:bold">10</span>
+   <span style="color:#ff0;font-weight:bold">11</span>
+(<span style="color:#ff0;font-weight:bold">2</span> rows)</code></pre></div>
+<p>Because Read Committed mode starts each command with a new snapshot that includes all transactions committed up to that instant, subsequent commands in the same transaction will see the effects of the committed concurrent transaction in any case. The point at issue above is whether or not a single command sees an absolutely consistent view of the database.</p>
+
+<h2 id="repeatable-read-isolation-level">Repeatable Read Isolation Level</h2>
+
+<p>The Repeatable Read isolation level only sees data committed before the transaction began; it never sees either uncommitted data or changes committed during transaction execution by concurrent transactions.<a href="https://www.postgresql.org/docs/manuals/">[2]</a></p>
+
+<p>This level is different from Read Committed in that a query in a repeatable read transaction sees a snapshot as of the start of the first non-transaction-control statement in the transaction, not as of the start of the current statement within the transaction.<a href="https://www.postgresql.org/docs/manuals/">[2]</a></p>
+
+<p><code>UPDATE</code> , <code>DELETE</code> , <code>SELECT FOR UPDATE</code> , and <code>SELECT FOR SHARE</code> commands will find target rows that were committed before the transaction start time. It is quite different from the execution in a read committed transaction which those commands can see changes committed before the command start time. Another concurrent transaction may apply updating operation to the same data and has to wait for the first updating transaction. If the first rolls back, then the second will proceed and update successfully. However. if the first commits, an error will occur. As an application developer, in this case, we have to roll back and retry the transaction from the beginning.</p>
+
+<p>Note that only updating transactions might need to be retried; read-only transactions will never have serialization conflicts. As we know, a read-only transaction only sees the version of data right before the transaction start time even if another  concurrent updating transaction commits.</p>
+
+<p>Also, here is an example using the <a href="#db-table">same table</a> used in the read committed example:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#007f7f"># Client A
+</span><span style="color:#007f7f"></span>postgres=&gt; BEGIN ISOLATION LEVEL REPEATABLE READ;
+BEGIN
+postgres=&gt; UPDATE website SET hits = <span style="color:#ff0;font-weight:bold">10</span> WHERE hits = <span style="color:#ff0;font-weight:bold">10</span>;
+UPDATE <span style="color:#ff0;font-weight:bold">1</span>
+postgres=&gt;</code></pre></div>
+<p>Then start another transaction to try to delete the same row:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#007f7f"># Client B
+</span><span style="color:#007f7f"></span>postgres=&gt; BEGIN ISOLATION LEVEL REPEATABLE READ;
+BEGIN
+postgres=&gt; DELETE FROM website WHERE hits = <span style="color:#ff0;font-weight:bold">10</span>;</code></pre></div>
+<p>It will be blocked because of waiting for the first updater to commit or roll back. Then commit in the first transaction so that the <code>DELETE</code> command fails:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">postgres=&gt; DELETE FROM website WHERE hits = <span style="color:#ff0;font-weight:bold">10</span>;
+ERROR:  could not serialize access due to concurrent update</code></pre></div>
+<p>Ultimately, don&rsquo;t forget to roll back in the second transaction.</p>
+
+<h2 id="reference">Reference</h2>
+
+<ol>
+<li><a href="https://en.wikipedia.org/wiki/Isolation_%28database_systems%29">Isolation</a></li>
+<li><a href="https://www.postgresql.org/docs/manuals/">PostgreSQL Manual 9.4 Chapter 13. Concurrency Control</a></li>
+</ol>
+  </article>
+
+  <br/>
+
+  
+      <div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "radarj" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  
+  
+</section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+     © 2017    ·  Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>. 
+  </section>
+</footer>
+
+    </main>
+
+    
+
+  </body>
+
+</html>

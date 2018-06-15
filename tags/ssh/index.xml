@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ssh on Radar</title>
+    <link>https://pjatgithub.github.io/tags/ssh/</link>
+    <description>Recent content in Ssh on Radar</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 28 Feb 2017 23:02:34 +0800</lastBuildDate>
+    
+	<atom:link href="https://pjatgithub.github.io/tags/ssh/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>SSH Port Forwarding</title>
+      <link>https://pjatgithub.github.io/posts/ssh-port-forwarding/</link>
+      <pubDate>Tue, 28 Feb 2017 23:02:34 +0800</pubDate>
+      
+      <guid>https://pjatgithub.github.io/posts/ssh-port-forwarding/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;UPDATE:&lt;/em&gt;
+&lt;em&gt;2017-03-05, add how to configure SSH client&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;For more details about configuring SSH client, go to &lt;a href=&#34;http://nerderati.com/2011/03/17/simplify-your-life-with-an-ssh-config-file/&#34;&gt;Simplify Your Life With an SSH Config File&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;There are three types of &lt;a href=&#34;https://help.ubuntu.com/community/SSH/OpenSSH/PortForwarding&#34;&gt;port forwarding&lt;/a&gt; with ssh:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Local port forwarding&lt;/strong&gt;: connecting to a remote server via an intermediateSSH server from local machine&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Remote port forwarding&lt;/strong&gt;: connecting to a remote server (often in local network) via SSH client from SSH server&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Dynamic port forwarding&lt;/strong&gt;: connections from various programs are forwarded via the SSH client, then via the SSH server, and finally to several destination servers&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

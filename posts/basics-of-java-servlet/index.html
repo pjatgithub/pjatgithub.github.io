@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Hongbin">
+    
+    
+
+    <base href="https://pjatgithub.github.io/">
+    <title>
+  Basics of Java Servlet · Radar
+</title>
+
+    <link rel="canonical" href="https://pjatgithub.github.io/posts/basics-of-java-servlet/">
+
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Mono:400,700">
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="https://pjatgithub.github.io/css/style.min.css">
+
+    
+
+    <link rel="icon" type="image/png" href="https://pjatgithub.github.io/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://pjatgithub.github.io/images/favicon-16x16.png" sizes="16x16">
+
+    
+
+    <meta name="generator" content="Hugo 0.42.1" />
+  </head>
+
+  <body>
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://pjatgithub.github.io/">
+      Radar
+    </a>
+    
+    <ul class="navigation-list float-right">
+      
+      <li class="navigation-item">
+        <a class="navigation-link" href="https://pjatgithub.github.io/posts/">Blog</a>
+      </li>
+      
+    </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+  <article>
+    <header>
+      <h1 class="title">Basics of Java Servlet</h1>
+      <h2 class="date">March 2, 2017</h2>
+
+      
+    </header>
+
+    <p>Servlet is the basis of Java Web.</p>
+
+<h2 id="lifecycle-of-servlet">Lifecycle of Servlet</h2>
+
+<p>5 phases of the lifecycle of servlet:</p>
+
+<ol>
+<li>A servlet class is loaded by the container (Tomcat or Jetty)</li>
+<li>Instantiate the servlet class (no-arg constructor is run)</li>
+<li>The <code>init()</code> method is called (called only <strong>once</strong> and always before the time the <code>service()</code> is called) which lets servlet to access the <code>ServletConfig</code> and <code>ServletContext</code> objects, where information about the servlet configuration and the web application is stored</li>
+<li>The <code>service()</code> method is called (handles different client requests in <strong>separate threads</strong>)</li>
+<li>The <code>destroy()</code> method is called (called only <strong>once</strong>)</li>
+</ol>
+
+<p>There is one main state, <strong>initialized</strong> , in the servlet lifecycle. If the servlet is not initialized, it is either being initialized (running no-arg constructor or <code>init()</code> method), being destroyed (running <code>destroy()</code>), or it simply does not exist.</p>
+
+<p></p>
+
+<h2 id="servletconfig">ServletConfig</h2>
+
+<p>A <code>ServletConfig</code> instance contains information related to a <code>Servlet</code> instance.</p>
+
+<ul>
+<li>One <code>ServletConfig</code> instance per servlet</li>
+<li>Passed as the argument to <code>init(ServletConfig)</code> method</li>
+<li>Parameters are configured in the Deployment Descriptor and can be used after <code>init()</code> is finished</li>
+<li>Call <code>getServletConfig()</code> in a servlet to get the corresponding <code>ServletConfig</code> object.</li>
+<li>Call <code>getInitParameter(String)</code> to retrieve initialization parameters that are placed in <code>&lt;init-param&gt;</code> element of <code>web.xml</code></li>
+</ul>
+
+<h2 id="servletcontext">ServletContext</h2>
+
+<p><code>ServletContext</code> contains information of a web application.</p>
+
+<ul>
+<li>One <code>ServletContext</code> instance per web application</li>
+<li>Use <code>getServletContext</code> method in a servlet to access the corrsponding <code>ServletContext</code> object.</li>
+<li>We can set <context-param> elements in DD for every servlets and JSPs in the web app to share some common parameters</li>
+</ul>
+
+<h2 id="httpservletrequest">HttpServletRequest</h2>
+
+<p>See the definition of 8 methods of HTTP protocol on W3C&rsquo;s <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html">Hypertext Transfer Protocol &ndash; HTTP/1.1</a>.</p>
+
+<p>The container&rsquo;s implementation of <code>HttpServletRequest</code> interface should also implement <code>ServletRequest</code> interface. <code>HttpServletRequest</code> is the most used  request objects. Here are something (not obvious things) about <code>HttpServletRequest</code>:</p>
+
+<ul>
+<li>Calling <code>getParameterValues(String)</code> will return a <code>String</code> array which contains multiple parameter values for a given parameter name</li>
+</ul>
+
+<h2 id="httpservletresponse">HttpServletResponse</h2>
+
+<p>Some important methods of <code>HttpServletResponse</code>:</p>
+
+<ul>
+<li><code>setHeader(String, String)</code> replace a header with a new value according to the given name, or create a new header if not exits</li>
+<li><code>addHeader(String, String)</code> adds a new header and value, or adds additional value to an existing header</li>
+<li><code>setIntHeader(String, int)</code> replace an existing header with integer value, or create a new header and value</li>
+<li>Using <code>sendRedirect(String)</code> tells clients to get a response from another url. Indeed, it sends clients the status code <strong>302</strong> which means what clients want has been <strong>moved temporarily</strong>.Call <code>setStatus(int)</code> with <strong>301</strong> , and call <code>setHeader(String, String)</code> with &ldquo;Location&rdquo; and a new url if you mean it has been <strong>moved permanently</strong></li>
+</ul>
+
+<h2 id="event-listener">Event Listener</h2>
+
+<p>The specification of Servlet defines several listener for some important events such as the creation of <code>ServletContext</code> object.</p>
+
+<h3 id="servletcontextlistener">ServletContextListener</h3>
+
+<p>The class that implements <code>ServletContextListener</code> can used to receive notification events about <code>ServletContext</code> lifecycle changes. Here are some points of this interface:</p>
+
+<ul>
+<li>The class implements the interface must either be declared in DD (<listener> element in <code>web.xml</code>), annotated with <code>WebListener</code> or registered via one of the <code>addListener</code> methods defined on <code>ServletContext</code></li>
+<li>The <code>contextInitialized(javax.servlet.ServletContextEvent)</code> method of the interface is called at the initialization of the <code>ServletContext</code> object</li>
+<li>The <code>contextDestroyed(javax.servlet.ServletContextEvent)</code> is called at the destruction the <code>ServletContext</code> object</li>
+</ul>
+
+<h2 id="singlethreadmodel">SingleThreadModel</h2>
+
+<p>If a servlet implements <code>SingleThreadModel</code> interface, the container will guarantee that only one thread will execute the <code>service()</code> method of a servlet instance. It is designed to protect instance variables of a servlet object.</p>
+
+<p>The container can maintain a single servlet, but queue every request and process one request completely before allowing the next request to proceed. Or the container can create a pool of servlet instances and process each request concurrently, one per servlet instance. <strong>[1]</strong></p>
+
+<p>If the container implements STM (single thread model) by pooling strategy, you&rsquo;d better not use STM. Unless you are definitely sure it queues all requests and only one specific servlet instance exists, you can use STM. Overall, you are not supposed to using STM which has been <strong>deprecated</strong> in Servlet API. Indeed, you should not put any instance variables in your servlet if you want the servlet thread-safe. And use attributes in request, session, or context (application) scope instead.</p>
+
+<h2 id="requestdispatcher">RequestDispatcher</h2>
+
+<p>We can use <code>RequestDispatcher</code> to let other servlets or JSPs to handle the request. There are two ways to get <code>RequestDispatcher</code>:</p>
+
+<ul>
+<li><code>ServletRequest.getRequestDispatcher(String)</code>, and use relative path to the original request or a path started with &ldquo;/&rdquo;</li>
+<li><code>ServletContext.getRequestDispatcher(String)</code>, and must use a path started with &ldquo;/&rdquo;</li>
+<li>Call <code>ServletRequest.getAttribute(String)</code> with <code>javax.servlet.forward.XXX</code> or <code>javax.servlet.include.XXX</code> such as <code>javax.servlet.forward.query_string</code> to retrieve original request&rsquo;s information.</li>
+</ul>
+
+<h2 id="httpsession">HttpSession</h2>
+
+<p>Since connections of <a href="https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol">HTTP</a> are stateless, servers have to find out a way to identify requests from a specific client. And <a href="https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#HTTP_session">HTTP Session</a> is used to solve the problem.</p>
+
+<p>In Servlet, the container generates a unique session ID and sends back to the client with the response. And the client sends back the session ID with subsequent requests. Therefore, the container sees the ID, finds the matching session, and associate the session with the request.</p>
+
+<p>The most common way for the client and the container to exchange the session info is through <a href="https://en.wikipedia.org/wiki/HTTP_cookie">cookies</a>. However, <strong>there is no guarantee</strong> that exchanging the session info via cookies always works because a client can disable cookies and then ignores the header <code>Set-Cookie</code> of a response.</p>
+
+<p>But, it does not mean there is no way to identify a client. Containers can rewrite the URL in the link sent to a client. A session ID is stuck to the end of a URL which is separated by a vendor-specific character. And <code>HttpServletResponse.encodeUrl(String)</code> can be used to achieve this goal after <code>HttpServletRequest.getSession()</code> has been invoked.</p>
+
+<p>To make sessions invalid, we can let the container do that for us by configuring a <code>&lt;session-timeout&gt;</code> element (in minutes) of a <code>&lt;session&gt;</code> in DD. Or set manually by call <code>HttpSession.setMaxInterval(int)</code> (in seconds).</p>
+
+<h2 id="httpsessionbindinglistener">HttpSessionBindingListener</h2>
+
+<p>The interface <code>HttpSessionBindingListener</code> has two method: <code>valueBound</code> and <code>valueUnbound</code>. And if a class implements the interface, the instance of this class will receive an event when it is added to (or removed from) a session as an attribute. Yet there are no needs to configure in DD to make <code>HttpSessionBindingListener</code> work.</p>
+
+<h2 id="httpsessionactivationlistener">HttpSessionActivationListener</h2>
+
+<p>The attributes added to a session object should be <code>Serializable</code>, implement <code>HttpSessionActivationListener</code> interface, or both. This interface is used for session migration and work like the way <code>writeObject</code> and <code>readObject</code> (in serialization) does.</p>
+
+<h2 id="reference">Reference</h2>
+
+<ol>
+<li>Head First Servlets and JSP, second edition</li>
+</ol>
+
+<p><strong><em>To Be Continued&hellip;</em></strong></p>
+  </article>
+
+  <br/>
+
+  
+      <div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "radarj" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  
+  
+</section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+     © 2017    ·  Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>. 
+  </section>
+</footer>
+
+    </main>
+
+    
+
+  </body>
+
+</html>

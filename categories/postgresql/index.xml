@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Postgresql on Radar</title>
+    <link>https://pjatgithub.github.io/categories/postgresql/</link>
+    <description>Recent content in Postgresql on Radar</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 13 Apr 2017 20:32:53 +0800</lastBuildDate>
+    
+	<atom:link href="https://pjatgithub.github.io/categories/postgresql/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>PostgreSQL Concurrency Control</title>
+      <link>https://pjatgithub.github.io/posts/postgresql-concurrency-control/</link>
+      <pubDate>Thu, 13 Apr 2017 20:32:53 +0800</pubDate>
+      
+      <guid>https://pjatgithub.github.io/posts/postgresql-concurrency-control/</guid>
+      <description>&lt;h2 id=&#34;transaction-isolation-level&#34;&gt;Transaction Isolation Level&lt;/h2&gt;
+
+&lt;p&gt;SQL standard defines four levels of transaction isolation.&lt;a href=&#34;https://en.wikipedia.org/wiki/Isolation_%28database_systems%29&#34;&gt;[1]&lt;/a&gt; Each level prevents different inconsistency phenomena:&lt;a href=&#34;https://www.postgresql.org/docs/manuals/&#34;&gt;[2]&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;A &lt;strong&gt;dirty read&lt;/strong&gt; is a transaction reads data written by a concurrent &lt;em&gt;uncommitted&lt;/em&gt; transaction.&lt;/li&gt;
+&lt;li&gt;A &lt;strong&gt;nonrepeatable read&lt;/strong&gt; is a transaction re-reads data it has previously read and finds that data has been modified by another transaction (that &lt;em&gt;committed&lt;/em&gt; since the initial read).&lt;/li&gt;
+&lt;li&gt;A &lt;strong&gt;phantom read&lt;/strong&gt; is a transaction re-executes a query returning a set of rows that satisfy a search condition and finds that the set of rows satisfying the condition has changed due to another recently-committed transaction.&lt;/li&gt;
+&lt;li&gt;A &lt;strong&gt;serialization anomaly&lt;/strong&gt; is that the result of successfully committing a group of transactions is inconsistent with all possible orderings of running those transactions one at a time.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>PostgreSQL Basics</title>
+      <link>https://pjatgithub.github.io/posts/postgresql-basics/</link>
+      <pubDate>Sat, 25 Mar 2017 11:50:57 +0800</pubDate>
+      
+      <guid>https://pjatgithub.github.io/posts/postgresql-basics/</guid>
+      <description>&lt;h2 id=&#34;preparation&#34;&gt;Preparation&lt;/h2&gt;
+
+&lt;p&gt;I have installed the PostgreSQL 9.6.2 on Ubuntu 16.04 LTS, and use command-line tools to manage the server with macOS.&lt;/p&gt;
+
+&lt;p&gt;To install PostgreSQL server on Ubuntu 16.04 LTS:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Type &lt;code&gt;sudo apt-get install postgresql&lt;/code&gt; to install the server.&lt;/li&gt;
+&lt;li&gt;Edit &lt;code&gt;/etc/postgresql/9.5/main/postgresql.conf&lt;/code&gt;, add the line &lt;code&gt;listen_addresses = &#39;*&#39;&lt;/code&gt; to listen on all IP addresses (&lt;code&gt;localhost&lt;/code&gt; by default).&lt;/li&gt;
+&lt;li&gt;Edit &lt;code&gt;/etc/postgresql/9.5/main/pg_hba.conf&lt;/code&gt;, and change the line &lt;code&gt;host all all 127.0.0.1/32 md5&lt;/code&gt; to &lt;code&gt;host all all 192.168.1.0/24 md5&lt;/code&gt; which enables remote login from the hosts in the local network.&lt;/li&gt;
+&lt;li&gt;Run &lt;code&gt;sudo su postgres&lt;/code&gt; to switch to the user &lt;code&gt;postgres&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Run &lt;code&gt;psql&lt;/code&gt; to connect the PostgreSQL server, and then type &lt;code&gt;\password&lt;/code&gt; to change the password of &lt;code&gt;postgres&lt;/code&gt;. (After the installation of PostgreSQL, a user and a group both named &lt;code&gt;postgres&lt;/code&gt; will be created on Ubuntu. And a user also named &lt;code&gt;postgres&lt;/code&gt; will be created on PostgreSQL, like &lt;code&gt;root&lt;/code&gt; in Mysql.)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

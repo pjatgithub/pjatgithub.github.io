@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Permission on Radar</title>
+    <link>https://pjatgithub.github.io/tags/permission/</link>
+    <description>Recent content in Permission on Radar</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 09 Jun 2017 03:49:06 +0800</lastBuildDate>
+    
+	<atom:link href="https://pjatgithub.github.io/tags/permission/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Basic File Permissions on Unix-like Systems</title>
+      <link>https://pjatgithub.github.io/posts/basic-file-permissions-on-unix-like-systems/</link>
+      <pubDate>Fri, 09 Jun 2017 03:49:06 +0800</pubDate>
+      
+      <guid>https://pjatgithub.github.io/posts/basic-file-permissions-on-unix-like-systems/</guid>
+      <description>&lt;h2 id=&#34;basic-permissions&#34;&gt;Basic Permissions&lt;/h2&gt;
+
+&lt;p&gt;Recently, I&amp;rsquo;ve been reading &lt;em&gt;The Linux Programming Interface&lt;/em&gt;. I decided to go through the first three chapters to review some basic concepts. When I was reading about the permissions of a directory, I was obsessed with a question that what do there permissions exactly mean? Indeed, I know about the permissions of a file. Users are divided into three categories: &lt;em&gt;user&lt;/em&gt;, &lt;em&gt;group&lt;/em&gt;, and &lt;em&gt;other&lt;/em&gt;. With &lt;em&gt;read&lt;/em&gt; permission, a user can read the content of the file; &lt;em&gt;write&lt;/em&gt; permission allows a user to change the content; as for &lt;em&gt;execute&lt;/em&gt; permission, a user can run the file (binary files, or script files like shell scripts or python scripts). And I did know the meanings are a bit different when these permissions apply to a directory. But what are the differences?&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
