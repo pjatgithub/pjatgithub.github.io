@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Hongbin">
+    
+    
+
+    <base href="https://pjatgithub.github.io/">
+    <title>
+  Experiments About Java Overloading · Radar
+</title>
+
+    <link rel="canonical" href="https://pjatgithub.github.io/posts/experiments-about-java-overloading/">
+
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Mono:400,700">
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="https://pjatgithub.github.io/css/style.min.css">
+
+    
+
+    <link rel="icon" type="image/png" href="https://pjatgithub.github.io/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://pjatgithub.github.io/images/favicon-16x16.png" sizes="16x16">
+
+    
+
+    <meta name="generator" content="Hugo 0.42.1" />
+  </head>
+
+  <body>
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://pjatgithub.github.io/">
+      Radar
+    </a>
+    
+    <ul class="navigation-list float-right">
+      
+      <li class="navigation-item">
+        <a class="navigation-link" href="https://pjatgithub.github.io/posts/">Blog</a>
+      </li>
+      
+    </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+  <article>
+    <header>
+      <h1 class="title">Experiments About Java Overloading</h1>
+      <h2 class="date">June 15, 2018</h2>
+
+      
+    </header>
+
+    
+
+<h2 id="overloading">Overloading</h2>
+
+<p>In Java, overloading is a mechanism to declare two methods with the same name but
+different signatures (definition can be found in [1]).</p>
+
+<h2 id="variable-argument-list">Variable Argument List</h2>
+
+<p>In Java 5, programmers are able to define methods which can be invoked with a variable
+number of arguments by using variable argument lists. For example, we can define
+a method like <code>public static void play(Person... persons)</code> and invoke it like
+<code>play(p1, p2, p3, p4)</code>.</p>
+
+<p>An alternative way is to declare the parameter as an array of the desired type.
+Declared as <code>public static void play(Person[] persons)</code>, it should be invoked like
+<code>play(new Person[]{p1, p2, p3, p4})</code>.</p>
+
+<p>One question hitting me is that whether we could declare two almost same methods
+which adopt two approaches above to support variable-length arguments within a class.
+Therefore, I write some <a href="https://github.com/pjatgithub/java_example/blob/master/overloading/Person.java">code</a> to dive deeper.</p>
+
+<p>The answer is that these two approaches are equivalent. We can use either one of
+them, but we will get a compilation error if both are used in one class.</p>
+
+<p>Here is another example relating to method calls with variable number of arguments,
+derived from the well-known book <em>Thinking in Java 4th Edition</em>. If two methods
+with the same name, <code>public static void play(float f, Character... chars)</code> and
+<code>public static void play(Character... chars)</code>, are defined, a compile-time error
+will occur when calling <code>play('a', 'b')</code>. The <code>javac</code> compiler gives the error as
+follows:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Person.java:43: error: reference to play is ambiguous
+        play(<span style="color:#0ff;font-weight:bold">&#39;a&#39;</span>, <span style="color:#0ff;font-weight:bold">&#39;b&#39;</span>);
+        ^
+  both method play(float,Character...) in Person and method play(Character...) in Person match
+<span style="color:#ff0;font-weight:bold">1</span> error</code></pre></div>
+<p>In order to find a set of general rules about overloading when calling methods
+supporting variable argument lists with not exact types (therefore widening and
+auto-boxing occur), I have done several experiments. Unfortunately, I am not able
+to make any general principle yet. Although there is a section describing how a
+Java compiler determines what methods being invoked both at compile-time and run-time
+in [1], I just found it too overwhelming to read these pages. So the suggestion,
+only define one overloaded with the support of variable argument lists, from Bruce
+Eckle is the best way for me to follow so far.</p>
+
+<h2 id="reference">Reference</h2>
+
+<ol>
+<li>The Java® Language Specification Java SE 9 Edition, Section 8.4.2</li>
+</ol>
+
+  </article>
+
+  <br/>
+
+  
+      <div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "radarj" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  
+  
+</section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+     © 2018    ·  Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>. 
+  </section>
+</footer>
+
+    </main>
+
+    
+
+  </body>
+
+</html>
